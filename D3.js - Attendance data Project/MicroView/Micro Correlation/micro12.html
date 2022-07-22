@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style>
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}
+
+.grid line {
+  stroke: lightgrey;
+  stroke-opacity: 0.7;
+  shape-rendering: crispEdges;
+}
+
+.grid path {
+  stroke-width: 0;
+}
+    h1{
+        text-align: center
+    }
+
+</style>
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<h1>Relation between Age & Average Attendance of all modules</h1>
+<div id="my_viz"></div>
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 10, right: 30, bottom: 30, left: 60},
+    width = 1300 - margin.left - margin.right,
+    height = 580 - margin.top - margin.bottom;
+
+    // set the ranges
+var x = d3.scaleLinear().range([0, width]);
+var y = d3.scaleLinear().range([height, 0]);
+
+    // gridlines in x axis function
+function make_x_gridlines() {
+    return d3.axisBottom(x)
+        .ticks(8)
+}
+
+// gridlines in y axis function
+function make_y_gridlines() {
+    return d3.axisLeft(y)
+        .ticks(5)
+}
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_viz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+//Read the data
+d3.csv("Data.csv", function(data) {
+
+  // Add X axis
+  var x = d3.scaleLinear()
+    .domain([15 , 70])
+    .range([ 0, width ]);
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x));
+
+  // Add Y axis
+  var y = d3.scaleLinear()
+    .domain([0, 100])
+    .range([ height, 0]);
+  svg.append("g")
+    .call(d3.axisLeft(y));
+
+     // add the X gridlines
+  svg.append("g")
+      .attr("class", "grid")
+      .attr("transform", "translate(0," + height + ")")
+      .call(make_x_gridlines()
+          .tickSize(-height)
+          .tickFormat("")
+      )
+
+  // add the Y gridlines
+  svg.append("g")
+      .attr("class", "grid")
+      .call(make_y_gridlines()
+          .tickSize(-width)
+          .tickFormat("")
+      )
+        svg.append("text")             
+            .attr("transform","translate(" + (width/2) + " ," + (height + margin.top + 20) + ")")
+            .style("text-anchor", "middle")
+            .text("AGE")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "18px")
+            .attr("fill", "steelblue");
+    svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x",0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Average Attendance")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "18px")
+            .attr("fill", "steelblue");
+
+  // Color scale: give me a specie name, I return a color
+  // var color = d3.scaleOrdinal()
+  //   .domain(["VIS3108","VIS3102","VIS3109","GAV3020","GAV3009","VIS3104","DES4032","DES3095","DES3096","COM3051","CAM1001","CAM1002","CAM1000","COM3037","COM3041","COM3036","GAV4018","GAV4017","GAV4028","MED3055","MED3030","MPR3002","MED0008","COM3038","MUL3055","CIS0002","CIS0003","CIS0005","CIS4040","CIS4037","MFP2005","MFP2006","MFP2008","GAV4037","GAV4038","CIS4008","CAM4017","GAV2021","GAV2011","GAV2027","CIS4023","CAM4039","CAM4037","CAM4040","GAV2005","GAV2016","GAV2004","CIS1010","CIS1013","CIS1018","GAV4003","GAV4020","CIS4021","CIS4022","VIS3105","COM4077","CAM4062","CAM4061","CAM1030","GAV1003","GAV1015","GAV1009","CIS4010","VIS3126","VIS3110","CAM4063","CIS2026","CIS2014","CIS2018","CAM4057","GAV4034","GAV4033","CIS1007","CIS1001","GAV2025","GAV2029","GAV2017","MED3047","COM3040","MUL3051","COM3047","COM3050","GAV2022","GAV2008","GAV2024","COM4090","COM4088","COM4083","CIS4020","CIS4019","CIS4012","COM3065","GAV3012","GAV3016","CAM4042","MED3050","MED3040","MED3051","MED2062","MED2034","MED2056","GAV2003","PER3008","PER3018","PER3028","CIS2009","CIS2017","CIS2019","CIS2021","CIS2001","COM3046","COM3042","CAM4036","CIS4009","GAV3003","GAV3021","GAV3010","MED3007","MED3020","MED3036","VIS3103","COM3045","VIS4059","VIS4060","VIS4073","MUL3063","MUL3064","MUL3065","GAV4024","GAV4002","MFP2026","MFP2019","MFP2017","GAV2002","GAV2015","CIS2016","CIS2015","MFP2027","GAV2028","GAV2007","GAV0003","CAM0001","CAM0002","GAV1006","MFP2028","MUL3060","MUL3059","MUL3061","MUL3062","MFP2024","CIS4027","FAE3010","FAE3013","COM3064","COM3067","GAV1030","GAV1004","FAE2014","FAE2016","CAM1027","CAM1008","CAM1011","DES2188","DES2193","DES2187","CAM2040","CAM2039","MFP2001","PER3012","PER3025","GAV0004","GAV0005","GAV1013","CAM1012","GAV1007","GAV1012","GAV1002","GAV1005","CIS1009","CIS1019","MFP2007","GAV2010","GAV2038","CAM1009","CAM1016","GAV0001","GAV0002","CIS1005","GAV3008","CAM1022","CAM1018","CAM1020","GAV1001","CAM1031","GAV1033","VIS4068","CAM1036","CAM1035","CAM4016","CIS1020"])
+  //   .range([ "#440154ff", "#21908dff"])
+
+    var red=0;var yellow=0; var green=0; var blue=0; 
+function colorPicker(v)
+        {
+          if(v<50){red++; console.log("Attendance greater than or equal to 90:", green); return "#cf3021"}
+          if(v>=50 && v<=75){yellow++; console.log("Attendance In between 89 & 75:", blue); return "#efcd45"}
+          if(v>75 && v<90){blue++; console.log("Attendance in between 74 & 50:", yellow); return "#588bae"}
+          if(v>=90){green++; console.log("Attendance less than 50:", red); return "#00a572"}
+            
+            
+            
+            
+        }
+    
+
+  // Add dots
+  svg.append('g')
+    .selectAll("dot")
+    .data(data)
+    .enter()
+    .append("circle")
+      .attr("cx", function (d) { return x(d.Sepal_Length); } )
+      .attr("cy", function (d) { return y(d.Petal_Length); } )
+      .attr("r", 5)
+      .attr("opacity", 0.8)
+      .style("fill", function (d) { return colorPicker(d.Petal_Length) } )
+
+})
+
+</script>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta charset="utf-8">
+        <meta name="description" content="L4F - Axes and scales ">
+        <title>SVG</title>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <style type="text/css">
+          svg {
+            font: 10px sans-serif;
+            shape-rendering: crispEdges;
+          }
+
+          .axis path,
+          .axis line {
+            fill: none;
+            stroke: #000;
+          }
+
+          path.domain {
+            stroke: none;
+          }
+
+          .y .tick line {
+            stroke: #ddd;
+          }
+        </style>
+</head>
+    
+<body>
+    <h1>Testing</h1>
+<script>
+            
+    d3.json("att_data.json").then(function(data){
+                
+    var course_CAM=["BMPSNG","CGNBA","CGSSNG","DNCSNG","FTPBA","FMCUBA","FASNG","JOUSNG","MJMSNG","MJSSNG",
+                    "MDCBA","MZSNG","MJNSNG","MMJSNG","MJPSNG","PLMSNG","OABA","SPJBA","TFPSNG","TVSNG",
+                      "DEFPRD","DCMPRD","FUAPRD","JOPRD","MCOPRD","MJNPRD","MPRPRD","FOMA","FOPRD","PFTMA",
+                        "PFTMAE","TVPPRD","ARDPHD","FAPHD","CAM1041N-T","CAM1042N-T","CATSNG","CAMA","GAV1036N-T"];
+                
+    var course_CSIS=["VIFND","DES1139-N","WMMSNG","WMDSNG","AISSNG","BSDSNG","UPSNG","CNASNG","CSSNG","CSFSNG",
+                    "CPTSNG","CPTFSNG","CSNSNG","CYBBS","DGMBS","ICTSNG","INFSNG","MUTBS","SWDSNG","SESNG",
+                        "WVSNG","WBPBS","VCOVE","CNFND","ICTFND","APCPRD","CSMS","CSMS1","CSDPRD","CSNMS",
+                          "CSNPRD","CNMS","CNPRD","CBSAMS","CBSMS","DTSAMS","DTSMS","IPMMS","IPMPRD","TIPRD",
+                            "NESPRD","SEPRD","CSPHD","CIS2025N-T","CIS1023N-T","ITUPD","ITPPD","HIFBS"];
+                
+    var course_GAV=["TDABA","AVSNG","AVBA","AVFSNG","CVESNG","CVEFSNG","CCHSNG","CCHFSNG","CANSNG","CANFSNG",
+                    "ZDSNG","ZDFSNG","GMSNG","GMFSNG","IGDSNG","VIWBA","TGDBS","TDGMA","ATDGMA","AQMA",
+                      "AQMA1","CGNMA","AVPRD","CVEMA","CVEPRD","CHAPRD","COGPRD","CACPRD","CAEPRD","CMA",
+                        "AGAMA","AGAPRD","ZEPRD","ASVPRD","DCAPRD","GMA","AGMA","GPDMA","GPDPRD","VIEAMA",
+                            "CGVIMO","CGPPRD","CSCPRD","GDEPRD","VIEIMO","TVEMS","GANDPH","GAV1038N-T","GAV1037N-T","GAV1039N-T"];
+        
+        /* Data Clustering by Departments */
+        
+    var dept_CAM=[],dept_CSIS=[],dept_GAV=[];
+    var att_length=data.attendanceData.length;  //  Data Length
+        
+    function dept(rawdata,courses)
+    {
+        temp=[];
+        for(i=0;i<rawdata.attendanceData.length;i++){
+            
+            for(j=0;j<courses.length;j++){
+            
+                if(rawdata.attendanceData[i].CourseCode==courses[j]){
+                    temp.push(rawdata.attendanceData[i])
+                }
+            }
+        }
+        return temp;
+    }
+        dept_CAM=dept(data,course_CAM);
+        dept_CSIS=dept(data,course_CSIS);
+        dept_GAV=dept(data,course_GAV);
+        
+        console.log("Data Clustering by departments=>");
+        console.log("Department CAM ", dept_CAM);
+        console.log("Department CSIS", dept_CSIS);
+        console.log("Department GAV", dept_GAV);
+        
+    
+    /* Data Clustering by Stage of Study for each Department */
+        
+    function edulevel(dept_name)
+    {
+        temp={}
+        flag=0;flag1=0;flag2=0;total=0
+        var foundationID=[];underGradID=[];postGradID=[];
+        for(i=0;i<dept_name.length;i++)
+        {    
+            stringSep=dept_name[i].ModuleCode.charAt(3)
+            
+            if(stringSep!=="4" && stringSep!=="0"){
+                underGradID[flag]=dept_name[i];
+                //total+=parseInt(underGradID[flag].Mark,10);
+                flag++;
+            }
+            else if(stringSep=="0"){
+                foundationID[flag1]=dept_name[i];
+                flag1++;
+            }
+            else{
+                postGradID[flag2]=dept_name[i];
+                flag2++;
+            }       
+        }
+        temp['Foundation']=foundationID
+        temp['UnderGrad']=underGradID
+        temp['PostGrad']=postGradID
+        return temp;
+    }
+    
+        CAM_levels=edulevel(dept_CAM);
+        CSIS_levels=edulevel(dept_CSIS);
+        GAV_levels=edulevel(dept_GAV);
+        console.log("Data Clustering by Stage of Study for each Department =>");
+        console.log("CAM",CAM_levels);
+        console.log("CSIS",CSIS_levels);
+        console.log("GAV",GAV_levels);
+    //console.log(total/underGradID.length)
+        
+        
+        /* Data Clustering by Module code for each department level */
+        
+//      merged = [];
+//
+//CAM_levels.Foundation.forEach(function (a) {
+//    if (!this[a.ModuleCode]) {
+//        this[a.ModuleCode] =  { StudentID: a.StudentID, ModuleCode: a.ModuleCode, WeekNum: a.WeekNum, Status: a.Status };
+//        merged.push(this[a.ModuleCode]);
+//        return;
+//    }
+//    if (!Array.isArray(this[a.ModuleCode].StudentID)) {
+//        this[a.ModuleCode].StudentID = [this[a.ModuleCode].StudentID];
+//    }
+//    if (!Array.isArray(this[a.ModuleCode].WeekNum)) {
+//        this[a.ModuleCode].WeekNum = [this[a.ModuleCode].WeekNum];
+//    }
+//    if (!Array.isArray(this[a.ModuleCode].Status)) {
+//        this[a.ModuleCode].Status = [this[a.ModuleCode].Status];
+//    }
+//    this[a.ModuleCode].StudentID.push(a.StudentID);
+//    this[a.ModuleCode].WeekNum.push(a.WeekNum);
+//    this[a.ModuleCode].Status.push(a.Status);
+//}, Object.create(null));
+//
+//console.log(merged);
+        
+        
+        
+    function mergeByMod(levels)
+    {
+            merged=[];
+            levels.forEach(function (a) 
+            {
+                if (!this[a.ModuleCode]) {
+                    this[a.ModuleCode] =  { StudentID: a.StudentID, ModuleCode: a.ModuleCode, WeekNum: a.WeekNum, Status: a.Status };
+                    merged.push(this[a.ModuleCode]);
+                    return;
+                }
+                if (!Array.isArray(this[a.ModuleCode].StudentID)) {
+                this[a.ModuleCode].StudentID = [this[a.ModuleCode].StudentID];
+                }
+                if (!Array.isArray(this[a.ModuleCode].WeekNum)) {
+                    this[a.ModuleCode].WeekNum = [this[a.ModuleCode].WeekNum];
+                }
+                if (!Array.isArray(this[a.ModuleCode].Status)) {
+                    this[a.ModuleCode].Status = [this[a.ModuleCode].Status];
+                }
+                this[a.ModuleCode].StudentID.push(a.StudentID);
+                this[a.ModuleCode].WeekNum.push(a.WeekNum);
+                this[a.ModuleCode].Status.push(a.Status);
+            }, Object.create(null));
+            
+            return merged;
+    }
+        
+        console.log("Clusting of Modules=>");
+        const Merged_CAM_FD=mergeByMod(CAM_levels.Foundation);
+        const Merged_CAM_UG=mergeByMod(CAM_levels.UnderGrad);
+        const Merged_CAM_PG=mergeByMod(CAM_levels.PostGrad);
+        console.log("Modules Clustering of Dept CAM of Foundation Year:",Merged_CAM_FD);
+        console.log("Modules Clustering of Dept CAM of Undergrad Year:",Merged_CAM_UG);
+        console.log("Modules Clustering of CAMof Postgrad Year:",Merged_CAM_PG);
+        
+        const Merged_CSIS_FD=mergeByMod(CSIS_levels.Foundation);
+        const Merged_CSIS_UG=mergeByMod(CSIS_levels.UnderGrad);
+        const Merged_CSIS_PG=mergeByMod(CSIS_levels.PostGrad);
+        console.log("Modules Clustering of Dept CSIS of Foundation Year:",Merged_CSIS_FD);
+        console.log("Modules Clustering of Dept CSIS of Undergrad Year:",Merged_CSIS_UG);
+        console.log("Modules Clustering of Dept CSIS of Postgrad Year:",Merged_CSIS_PG);
+        
+        const Merged_GAV_FD=mergeByMod(GAV_levels.Foundation);
+        const Merged_GAV_UG=mergeByMod(GAV_levels.UnderGrad);
+        const Merged_GAV_PG=mergeByMod(GAV_levels.PostGrad);
+        console.log("Modules Clustering of Dept GAV of Foundation Year",Merged_GAV_FD);
+        console.log("Modules Clustering of Dept GAV of Undergrad Year",Merged_GAV_UG);
+        console.log("Modules Clustering of Dept GAV of Postgrad Year",Merged_GAV_PG);
+        
+        /* Average Attendance of each Module by Stage of Study */
+        //PDG,P,CC,PWR,PROJ,PRM,O,LAB
+        
+        function moduleAttendance(data)
+        {    
+            temp=[];
+            data.forEach(function (a){
+                present=0;
+                len=a.Status.length;
+                for(i=0;i<len;i++){
+                    if(a.Status[i]=="CC" || a.Status[i]=="PDG" || a.Status[i]=="PWR" || a.Status[i]=="P" || a.Status[i]=="PROJ" || a.Status[i]=="PRM" || a.Status[i]=="O" || a.Status=="LAB" || a.Status[i]=="NM"){
+                       present++; 
+                    }
+                
+                }
+                
+                att_Avg=(present/len)*100;
+                Total_att={};
+                Total_att['ModuleCode']=a.ModuleCode;
+                Total_att['Average']=att_Avg;
+                temp.push(Total_att);    
+            })
+            return temp;
+        }
+            avgAtt_CAMFD=moduleAttendance(Merged_CAM_FD);
+            avgAtt_CAMUG=moduleAttendance(Merged_CAM_UG);
+            avgAtt_CAMPG=moduleAttendance(Merged_CAM_PG);
+            avgAtt_CSISFD=moduleAttendance(Merged_CSIS_FD);
+            avgAtt_CSISUG=moduleAttendance(Merged_CSIS_UG);
+            avgAtt_CSISPG=moduleAttendance(Merged_CSIS_PG);
+            avgAtt_GAVFD=moduleAttendance(Merged_GAV_FD);
+            avgAtt_GAVUG=moduleAttendance(Merged_GAV_UG);
+            avgAtt_GAVPG=moduleAttendance(Merged_GAV_PG);
+        
+            console.log("Attendance:")
+            console.log(avgAtt_CAMFD);console.log(avgAtt_CAMUG);console.log(avgAtt_CAMPG);
+            console.log(avgAtt_CSISFD);console.log(avgAtt_CSISUG);console.log(avgAtt_CSISPG);
+            console.log(avgAtt_GAVFD);console.log(avgAtt_GAVUG);console.log(avgAtt_GAVPG);
+        
+        function totalAtt(rawdata, dept, level){
+            
+            a=dept;b=level;
+            temp={}
+            cal=0;len=rawdata.length;
+            for(i=0;i<len;i++){
+                cal+=rawdata[i].Average;
+            }
+            res=(cal/len);
+            temp['Dept']=a;
+            temp['level']=b;
+            temp['Average']=res;
+            return temp;
+        }
+        
+        check=[];
+        check.push(totalAtt(avgAtt_CAMFD, 'CAM', 'Foundation'));
+        check.push(totalAtt(avgAtt_CAMUG, 'CAM', 'Undergrad'));
+        check.push(totalAtt(avgAtt_CAMPG, 'CAM', 'Postgrad'));
+        check.push(totalAtt(avgAtt_CSISFD, 'CSIS', 'Foundation'));
+        check.push(totalAtt(avgAtt_CSISUG, 'CSIS', 'Undegrad'));
+        check.push(totalAtt(avgAtt_CSISPG, 'CSIS', 'Postgrad'));
+        check.push(totalAtt(avgAtt_GAVFD, 'GAV', 'Foundation'));
+        check.push(totalAtt(avgAtt_GAVUG, 'GAV', 'Undergrad'));
+        check.push(totalAtt(avgAtt_GAVPG, 'GAV', 'Postgrad'));
+        console.log("Average Attendance for Each Dept:",check);
+        data_set=[];
+        CAM={};CSIS={};GAV={}
+        CAM['Dept']=check[0].Dept; CAM['FD']=check[0].Average; CAM['UG']=check[1].Average; CAM['PG']=check[2].Average;
+        CSIS['Dept']=check[3].Dept; CSIS['FD']=check[3].Average; CSIS['UG']=check[4].Average; CSIS['PG']=check[5].Average;
+        GAV['Dept']=check[6].Dept; GAV['FD']=check[6].Average; GAV['UG']=check[7].Average; GAV['PG']=check[8].Average;
+        data_set.push(CAM); data_set.push(CSIS); data_set.push(GAV);
+        
+        console.log("Dataset",data_set);
+                
+        
+})
+</script>
+    
+</body>
+</html>

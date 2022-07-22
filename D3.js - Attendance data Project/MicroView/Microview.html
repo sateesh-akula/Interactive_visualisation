@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+    <title>MICROVIEW OF AVERAGE ATTENDANCE</title>
+</head>
+
+<style>
+
+    .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 2px;
+    }
+    .grid line {
+        stroke: lightgrey;
+        stroke-opacity: 0.7;
+        shape-rendering: crispEdges;
+    }
+    .grid path {
+        stroke-width: 0;
+    }
+    .toolTip {
+        font-family: sans-serif;
+        position: absolute;
+        display: none;
+        min-width: 80px;
+        height: auto;
+        background: none repeat scroll 0 0 #f8f8ff;
+        border: 0.5px hidden #ffffff;
+        padding: 14px;
+        text-align: center;
+    }
+    h1{
+        text-align: center;
+        font-size-adjust: auto
+        font-family: sans-serif;
+        
+    }
+    #my_viz{
+        align-self: center
+    }
+    
+</style>
+
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<h1>Relation between Age & Average Attendance of all modules</h1>
+<div id="my_viz"></div>
+<div id="legend"></div>
+
+
+<script>
+
+    // set the dimensions and margins of the graph
+    var margin = { top: 10, right: 30, bottom: 30, left: 60 },
+        width = 1300 - margin.left - margin.right,
+        height = 570 - margin.top - margin.bottom;
+    
+    var tooltip = d3.select("body").append("div").attr("class", "toolTip");
+
+    // set the ranges
+    var x = d3.scaleLinear().range([0, width]);
+    var y = d3.scaleLinear().range([height, 0]);
+
+    // gridlines in x axis function
+    function make_x_gridlines() {
+        return d3.axisBottom(x)
+            .ticks(8)
+    }
+
+    // gridlines in y axis function
+    function make_y_gridlines() {
+        return d3.axisLeft(y)
+            .ticks(5)
+    }
+
+    // append the svg object to the body of the page
+    var svg = d3.select("#my_viz")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom+10)
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    //Read the data
+    d3.csv("Sateesh.csv", function (data) {
+        var modules = [...new Set(D = data.map(({ ModuleCode }) => ModuleCode))];
+        console.log(modules);
+
+        var dropdownChange = function () {
+            fdata = data.filter(d => d.ModuleCode == this.value);
+            console.log(fdata);
+           d3.selectAll(".circle").remove();
+            updateGraph(fdata);
+        };
+
+        var dropdown = d3.select("#my_viz")
+            .insert("select", "svg")
+            .on("change", dropdownChange);
+
+        dropdown.selectAll("option")
+            .data(modules)
+            .enter().append("option")
+            .attr("value", function (d) { return d; })
+            .text(function (d) {
+                return d;
+            });
+
+        // Add X axis
+        var x = d3.scaleLinear()
+//            .domain(d3.extent(data, function (d) { return d.Age }))
+            .domain([0,70])
+            .range([0, width]);
+        svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        // Add Y axis
+        var y = d3.scaleLinear()
+            .domain([0,100])
+            //.domain(d3.extent(data, function (d) { return d.Average }))
+            .range([height, 0]);
+            svg.append("g")
+            .call(d3.axisLeft(y));
+
+        // add the X gridlines
+        svg.append("g")
+            .attr("class", "grid")
+            .attr("transform", "translate(0," + height + ")")
+            .call(make_x_gridlines()
+                .tickSize(-height)
+                .tickFormat("")
+            )
+
+        // add the Y gridlines
+        svg.append("g")
+            .attr("class", "grid")
+            .call(make_y_gridlines()
+                .tickSize(-width)
+                .tickFormat("")
+            )
+        
+          // text label for the x axis
+        svg.append("text")             
+            .attr("transform","translate(" + (width/2) + " ," + (height + margin.top + 20) + ")")
+            .style("text-anchor", "middle")
+            .text("AGE")
+            .attr("dy","0.5em")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "18px")
+            .attr("fill", "steelblue");
+        
+          // text label for the y axis
+        svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x",0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Average Attendance")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "18px")
+            .attr("fill", "steelblue");
+
+        // Color scale: give me a specie name, I return a color
+        var color = d3.scaleOrdinal()
+            .domain(modules)
+            .range(["#440154ff", "#21908dff", "#5DC963FF", "#8870FA"]);
+
+        module = data.filter(d => d.ModuleCode == modules[0]);
+
+        updateGraph(module);
+        function updateGraph(data) 
+        {
+            
+            // Add dots
+            svg.append('g')
+                .selectAll("dot")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr('class','circle')
+                .attr("cx", function (d) { return x(d.Age); })
+                .attr("cy", function (d) { return y(d.Average); })
+                .attr("r", 8)
+                .attr("opacity", 0.8)
+                .style("fill", function (d) { return colorPicker(d.Average) })
+//                .style("fill", function (d) { return color(d.ModuleCode) });
+            .on("mousemove", function(d){
+            tooltip
+              .style("left", d3.event.pageX - 50 + "px")
+              .style("top", d3.event.pageY - 70 + "px")
+              .style("display", "inline-block")
+//              .attr("fill", "white")    
+                .html("<strong>AGE: </strong>" + (d.Age) + "<br>" + "<strong>Att: </strong>" + (d.Average));
+            })
+    		.on("mouseout", function(d){ tooltip.style("display", "none");});
+        }
+        
+        function colorPicker(v)
+        {
+          if(v<50){return "#cf3021"}
+          if(v>=50 && v<=75){return "#efcd45"}
+          if(v>75 && v<90){return "#588bae"}
+          if(v>=90){return "#00a572"}
+        }
+
+        var svg1 = d3.select("#legend")
+            .append("svg")
+            .attr("width", 1000)
+            .attr("height", 100)
+            .append("g")
+            .attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
+        var circle1 = svg1.append("circle")
+                          .attr("cx", 240)
+                          .attr("cy", 29)
+                          .attr("r", 8)
+                          .attr("opacity", 0.8)
+                          .style("fill","#CF3021");
+                       svg1.append("text")
+                          .attr("x",252)
+                          .attr("y",33)
+                          .style("font-size","15px")
+                          .text("<40");
+        var circle2 = svg1.append("circle")
+                                 .attr("cx", 400)
+                             .attr("cy", 30)
+                                .attr("r", 8)
+                                .attr("opacity", 0.8)
+                                .style("fill","#efcd45");
+                                svg1.append("text")
+                                .attr("x",412)
+                                .attr("y",33)
+                                .style("font-size","15px")
+                                .text(">=40 & <50");
+        var circle3 = svg1.append("circle")
+                                  .attr("cx", 600)
+                              .attr("cy", 30)
+                                 .attr("r", 8)
+                                 .attr("opacity", 0.8)
+                                 .style("fill","#588bae");
+                                 svg1.append("text")
+                                 .attr("x",612)
+                                 .attr("y",33)
+                                 .style("font-size","15px")
+                                 .text(">=50 & <60");
+         var circle4 = svg1.append("circle")
+                                  .attr("cx", 800)
+                              .attr("cy", 30)
+                                 .attr("r", 8)
+                                 .attr("opacity", 0.8)
+                                 .style("fill","#00a572");
+                                 svg1.append("text")
+                                 .attr("x",812)
+                                 .attr("y",33)
+                                 .style("font-size","15px")
+                                 .text(">=60 & <70");
+        
+
+    })
+
+</script>
